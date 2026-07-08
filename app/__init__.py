@@ -1,8 +1,10 @@
 import os
 from flask import Flask
+from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
+migrate = Migrate()
 
 
 def create_app():
@@ -18,6 +20,7 @@ def create_app():
     os.makedirs(app.instance_path, exist_ok=True)
 
     db.init_app(app)
+    migrate.init_app(app, db)
 
     # 注册自定义 Jinja 过滤器
     from app.utils import format_date, priority_badge_class, is_overdue
@@ -30,9 +33,5 @@ def create_app():
     # 注册蓝图
     from app.routes import main
     app.register_blueprint(main)
-
-    # 首次运行时创建数据库表
-    with app.app_context():
-        db.create_all()
 
     return app
