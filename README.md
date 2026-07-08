@@ -63,3 +63,51 @@ todo-app/
 ```bash
 python test_app.py
 ```
+
+## 分支策略
+
+本项目采用 **简化版 Git Flow**：
+
+```
+main          ★ 稳定发布
+  └─ develop  ◆ 开发主线（默认分支）
+       └─ feature/xxx  功能分支
+```
+
+| 分支 | 用途 | 直接提交 |
+|------|------|----------|
+| `main` | 稳定版本，只从 develop 合并 | ❌ |
+| `develop` | 日常开发集成，默认分支 | ❌ |
+| `feature/*` | 单个功能/改动 | ✅ |
+
+### 开发流程
+
+```bash
+# 1. 从 develop 创建功能分支
+git checkout develop
+git checkout -b feature/my-feature
+
+# 2. 开发并提交
+git add .
+git commit -m "feat: 功能描述"
+
+# 3. 完成后合并回 develop
+git checkout develop
+git merge feature/my-feature
+git push origin develop
+
+# 4. 发版时合并到 main 并打 tag
+git checkout main
+git merge develop
+git tag v1.0.0
+git push origin main --tags
+```
+
+### Commit 规范
+
+- `feat:` 新功能
+- `fix:` 修复 bug
+- `refactor:` 重构
+- `style:` 样式变更
+- `docs:` 文档更新
+- `chore:` 构建/工具变更
