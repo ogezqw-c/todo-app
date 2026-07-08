@@ -21,6 +21,7 @@ class Notification(db.Model):
     type = db.Column(db.String(20), nullable=False, default='overdue')
     is_read = db.Column(db.Boolean, nullable=False, default=False)
     task_id = db.Column(db.Integer, db.ForeignKey('tasks.id', ondelete='SET NULL'), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     task = db.relationship('Task', backref=db.backref('notifications', lazy='select'))

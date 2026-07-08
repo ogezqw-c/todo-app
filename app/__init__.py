@@ -1,10 +1,12 @@
 import os
-from flask import Flask
+from flask import Flask, redirect, session, url_for
+from flask_login import LoginManager, current_user
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 migrate = Migrate()
+login_manager = LoginManager()
 
 
 def create_app():
@@ -21,6 +23,16 @@ def create_app():
 
     db.init_app(app)
     migrate.init_app(app, db)
+    login_manager.init_app(app)
+    login_manager.login_view = 'main.login'
+    login_manager.login_message = '请先登录后再访问该页面。'
+    login_manager.login_message_category = 'warning'
+
+    # Flask-Login 用户加载器
+    @login_manager.user_loader
+    def load_user(user_id):
+        from app.models import User
+        return User.query.get(int(user_id))
 
     # 注册自定义 Jinja 过滤器
     from app.utils import format_date, priority_badge_class, is_overdue
@@ -34,12 +46,16 @@ def create_app():
     from app.routes import main
     app.register_blueprint(main)
 
-    # 全局上下文：通知未读数（导航栏铃铛显示）
+    # 全局上下文：通知未读数（仅当前用户）
     @app.context_processor
     def inject_notification_count():
-        from app.notifications import Notification
-        with app.app_context():
-            count = Notification.query.filter_by(is_read=False).count()
+        if current_user.is_authenticated:
+            from app.notifications import Notification
+            count = Notification.query.filter_by(
+                is_read=False, user_id=current_user.id
+            ).count()
+        else:
+            count = 0
         return {'notification_count': count}
 
     # 启动定期逾期检查（APScheduler，避免 debug 双进程）
