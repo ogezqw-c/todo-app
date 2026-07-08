@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}架构文档 — TaskFlow{% endblock %}
+
+{% block content %}
+<h1>🏗️ 系统架构文档</h1>
+
+<div class="glass-card mb-4">
+    <div class="card-header">
+        <i class="bi bi-diagram-3 me-2"></i> 1. 系统架构总览
+    </div>
+    <div class="card-body">
+        <pre class="mermaid">
+graph TB
+    subgraph 浏览器["🌐 浏览器"]
+        DASH[仪表盘 /]
+        TASKS[任务列表 /tasks]
+        CATS[分类管理 /categories]
+        LOG[变更日志 /changelog]
+    end
+
+    subgraph FLASK["🐍 Flask 应用层"]
+        ROUTE[app/routes.py - 18个路由]
+        STATS[app/stats.py - 统计计算]
+        UTILS[app/utils.py - Jinja 过滤器]
+        AUDIT[app/audit.py - 日志读写]
+    end
+
+    subgraph ORM["🗄️ ORM 层"]
+        MODELS[app/models.py - Task · Category]
+        MIGRATE[Flask-Migrate / Alembic]
+    end
+
+    subgraph STORAGE["💾 持久层"]
+        SQLITE[(SQLite - instance/todo.db)]
+        JSON[changelog.json - 需求变更]
+    end
+
+    subgraph TEMPLATES["🎨 Jinja2 模板层"]
+        BASE[base.html 布局]
+        INDEX[index.html 仪表盘]
+        TASK_F[tasks/ - 列表·详情·表单]
+        CAT_F[categories/ - 列表·表单]
+        CHANGELOG_T[changelog.html]
+    end
+
+    浏览器 -->|HTTP GET/POST| FLASK
+    FLASK --> ORM
+    ORM --> SQLITE
+    AUDIT --> JSON
+    FLASK --> TEMPLATES
+    TEMPLATES -->|HTML 响应| 浏览器
+        </pre>
+    </div>
+</div>
+
+<div class="glass-card mb-4">
+    <div class="card-header">
+        <i class="bi bi-database me-2"></i> 2. 数据库 ER 图
+    </div>
+    <div class="card-body">
+        <pre class="mermaid">
+erDiagram
+    Task ||--o{ task_categories : "多对多"
+    Category ||--o{ task_categories : "多对多"
+
+    Task {
+        int id PK
+        string title "任务标题(200)"
+        text description
+        string priority "high/medium/low"
+        date due_date
+        bool completed
+        datetime completed_at
+        datetime created_at
+        datetime updated_at
+    }
+
+    Category {
+        int id PK
+        string name "分类名(50,UNIQUE)"
+        string color "十六进制(7)"
+    }
+
+    task_categories {
+        int task_id FK
+        int category_id FK
+    }
+        </pre>
+    </div>
+</div>
+
+<div class="glass-card mb-4">
+    <div class="card-header">
+        <i class="bi bi-signpost me-2"></i> 3. 路由地图
+    </div>
+    <div class="card-body">
+        <pre class="mermaid">
+graph LR
+    subgraph GET页面["📄 GET 页面路由"]
+        R_INDEX[GET /<br/>仪表盘]
+        R_TASKS[GET /tasks<br/>任务列表+过滤]
+        R_TASK_NEW[GET /tasks/new<br/>新建表单]
+        R_TASK_DETAIL[GET /tasks/:id<br/>任务详情]
+        R_TASK_EDIT[GET /tasks/:id/edit<br/>编辑表单]
+        R_CATS[GET /categories<br/>分类列表]
+        R_CAT_NEW[GET /categories/new<br/>新建分类]
+        R_CAT_EDIT[GET /categories/:id/edit<br/>编辑分类]
+        R_LOG[GET /changelog<br/>变更日志]
+    end
+
+    subgraph POST操作["✏️ POST 操作路由"]
+        R_TASK_CREATE[POST /tasks<br/>创建任务]
+        R_TASK_UPDATE[POST /tasks/:id/update]
+        R_TASK_DELETE[POST /tasks/:id/delete]
+        R_TASK_TOGGLE[POST /tasks/:id/toggle]
+        R_CAT_CREATE[POST /categories]
+        R_CAT_UPDATE[POST /categories/:id/update]
+        R_CAT_DELETE[POST /categories/:id/delete]
+        R_LOG_ADD[POST /changelog]
+        R_LOG_DEL[POST /changelog/:id/delete]
+    end
+        </pre>
+    </div>
+</div>
+
+<div class="glass-card mb-4">
+    <div class="card-header">
+        <i class="bi bi-files me-2"></i> 4. 模板继承树
+    </div>
+    <div class="card-body">
+        <pre class="mermaid">
+graph TD
+    BASE["base.html<br/>导航栏 · Flash · 页脚"] --> INDEX["index.html<br/>仪表盘"]
+    BASE --> TASK_LIST["tasks/list.html<br/>任务列表"]
+    BASE --> TASK_DETAIL["tasks/detail.html<br/>任务详情"]
+    BASE --> TASK_FORM["tasks/form.html<br/>新建/编辑任务"]
+    BASE --> CAT_LIST["categories/list.html<br/>分类列表"]
+    BASE --> CAT_FORM["categories/form.html<br/>新建/编辑分类"]
+    BASE --> ARCH["architecture.html<br/>架构文档"]
+
+    BASE -.- CSS["style.css<br/>暗色主题·毛玻璃·渐变"]
+    BASE -.- JS["app.js<br/>删除确认·Toggle·Toast"]
+        </pre>
+    </div>
+</div>
+
+<div class="glass-card mb-4">
+    <div class="card-header">
+        <i class="bi bi-arrow-left-right me-2"></i> 5. 核心数据流：创建任务
+    </div>
+    <div class="card-body">
+        <pre class="mermaid">
+sequenceDiagram
+    actor User as 👤 用户
+    participant Browser as 🌐 浏览器
+    participant Flask as 🐍 Flask
+    participant DB as 🗄️ SQLite
+
+    User->>Browser: 填写表单，点击保存
+    Browser->>Flask: POST /tasks
+    Flask->>Flask: 验证标题非空 + 解析日期
+    Flask->>DB: INSERT INTO tasks
+    Flask->>DB: INSERT INTO task_categories
+    DB-->>Flask: commit OK
+    Flask->>Browser: 302 Redirect → /tasks
+    Browser->>Flask: GET /tasks
+    Flask->>DB: SELECT * FROM tasks
+    DB-->>Flask: 任务列表
+    Flask-->>Browser: HTML 页面
+    Browser-->>User: ✅ 看到新任务
+        </pre>
+    </div>
+</div>
+
+<div class="glass-card mb-4">
+    <div class="card-header">
+        <i class="bi bi-folder me-2"></i> 6. 项目文件地图
+    </div>
+    <div class="card-body">
+        <pre class="mermaid">
+graph LR
+    subgraph 入口["🚀 入口"]
+        APP_PY[app.py]
+        CONFIG[config.py]
+        REQ[requirements.txt]
+    end
+
+    subgraph 核心["🧠 app/"]
+        INIT[__init__.py - 工厂+Migrate]
+        MODELS2[models.py - ORM模型]
+        ROUTES[routes.py - 18个路由]
+        STATS2[stats.py - 统计算法]
+        UTILS2[utils.py - 过滤器]
+        AUDIT2[audit.py - 日志读写]
+    end
+
+    subgraph 前端["🎨 前端"]
+        CSS2[style.css - 暗色主题]
+        JS2[app.js - 交互脚本]
+    end
+
+    subgraph 数据["💾"]
+        DB_FILE[(todo.db)]
+        LOG_JSON[changelog.json]
+    end
+
+    subgraph DevOps["🔧"]
+        MIGRATIONS[migrations/]
+        SKILLS[.claude/skills/]
+    end
+
+    APP_PY --> INIT
+    INIT --> MODELS2
+    INIT --> ROUTES
+    INIT --> MIGRATIONS
+        </pre>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>
+mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+        primaryColor: '#7C5CFC',
+        primaryTextColor: '#EAEAF0',
+        primaryBorderColor: '#7C5CFC',
+        lineColor: '#00C6FF',
+        secondaryColor: '#0f3460',
+        tertiaryColor: '#1a1a2e',
+        background: '#0D0D1A',
+        mainBkg: '#12122A',
+        nodeBorder: '#7C5CFC',
+        clusterBkg: '#12122A',
+        clusterBorder: '#333',
+        titleColor: '#EAEAF0',
+        edgeLabelBackground: '#12122A',
+        nodeTextColor: '#EAEAF0'
+    }
+});
+</script>
+{% endblock %}
