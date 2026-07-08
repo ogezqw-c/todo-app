@@ -15,14 +15,15 @@
                         <label for="title" class="form-label">标题 <span style="color:var(--danger);">*</span></label>
                         <input type="text" class="form-control" id="title" name="title"
                                value="{{ task.title if task else '' }}" required maxlength="200"
-                               placeholder="输入任务标题...">
+                               placeholder="例如：完成 Q3 季度报告、购买生日礼物">
+                        <div class="form-text">建议简洁明确，便于快速浏览</div>
                     </div>
 
                     <!-- 描述 -->
                     <div class="mb-3">
                         <label for="description" class="form-label">描述</label>
                         <textarea class="form-control" id="description" name="description" rows="3"
-                                  placeholder="可选的详细描述...">{{ task.description if task and task.description else '' }}</textarea>
+                                  placeholder="例如：需要包含数据分析和可视化图表，最终以 PDF 格式提交">{{ task.description if task and task.description else '' }}</textarea>
                     </div>
 
                     <!-- 优先级 + 截止日期 -->
@@ -30,16 +31,17 @@
                         <div class="col-md-6">
                             <label for="priority" class="form-label">优先级</label>
                             <select class="form-select" id="priority" name="priority">
-                                <option value="high" {% if task and task.priority == 'high' %}selected{% endif %}>🔴 高</option>
-                                <option value="medium" {% if not task or task.priority == 'medium' %}selected{% endif %}>🟡 中</option>
-                                <option value="low" {% if task and task.priority == 'low' %}selected{% endif %}>🟢 低</option>
+                                <option value="high" {% if task and task.priority == 'high' %}selected{% endif %}>🔴 高 — 紧急重要</option>
+                                <option value="medium" {% if not task or task.priority == 'medium' %}selected{% endif %}>🟡 中 — 一般任务</option>
+                                <option value="low" {% if task and task.priority == 'low' %}selected{% endif %}>🟢 低 — 有空再做</option>
                             </select>
+                            <div class="form-text">逾期任务会自动触发邮件提醒</div>
                         </div>
                         <div class="col-md-6">
                             <label for="due_date" class="form-label">截止日期</label>
                             <input type="date" class="form-control" id="due_date" name="due_date"
                                    value="{{ task.due_date.strftime('%Y-%m-%d') if task and task.due_date else '' }}">
-                            <div class="form-text">可选，留空表示无截止日期</div>
+                            <div class="form-text">格式：YYYY-MM-DD，留空表示无截止日期</div>
                         </div>
                     </div>
 

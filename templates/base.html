@@ -26,22 +26,22 @@
                 <!-- 用户主菜单 -->
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.index') }}">
+                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{{ url_for('main.index') }}">
                             <i class="bi bi-speedometer2 me-1"></i> 仪表盘
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.task_list') }}">
+                        <a class="nav-link {% if request.path.startswith('/tasks') %}active{% endif %}" href="{{ url_for('main.task_list') }}">
                             <i class="bi bi-list-check me-1"></i> 任务
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.category_list') }}">
+                        <a class="nav-link {% if request.path.startswith('/categories') %}active{% endif %}" href="{{ url_for('main.category_list') }}">
                             <i class="bi bi-tags me-1"></i> 分类
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link position-relative" href="{{ url_for('main.notification_list') }}">
+                        <a class="nav-link position-relative {% if request.path.startswith('/notifications') %}active{% endif %}" href="{{ url_for('main.notification_list') }}">
                             <i class="bi bi-bell me-1"></i> 通知
                             {% if notification_count > 0 %}
                             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.6rem;">

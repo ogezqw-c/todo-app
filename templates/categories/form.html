@@ -14,7 +14,10 @@
                         <label for="name" class="form-label">名称 <span style="color:var(--danger);">*</span></label>
                         <input type="text" class="form-control" id="name" name="name"
                                value="{{ category.name if category else '' }}" required maxlength="50"
-                               placeholder="例如：工作、个人、学习">
+                               placeholder="例如：工作、个人、学习、生活、健身">
+                        <div class="form-text">
+                            <i class="bi bi-lightbulb"></i> 建议用简短名词，如：工作、个人、项目A、学习
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -26,7 +29,30 @@
                                    value="{{ category.color if category else '#7C5CFC' }}"
                                    pattern="^#[0-9a-fA-F]{6}$" placeholder="#7C5CFC">
                         </div>
-                        <div class="form-text">选择或输入十六进制颜色值</div>
+                        <div class="form-text">
+                            <i class="bi bi-palette"></i> 点击色块选择或手动输入十六进制颜色值
+                        </div>
+                    </div>
+
+                    <!-- 快捷颜色预设 -->
+                    <div class="mb-3">
+                        <label class="form-label">快捷颜色</label>
+                        <div class="d-flex gap-2 flex-wrap">
+                            {% for preset in [
+                                ('#7C5CFC', '紫'),
+                                ('#00C6FF', '青'),
+                                ('#00E676', '绿'),
+                                ('#FF5252', '红'),
+                                ('#FFB74D', '橙'),
+                                ('#FFD600', '黄'),
+                                ('#E040FB', '粉'),
+                                ('#78909C', '灰'),
+                            ] %}
+                            <button type="button" class="color-preset btn btn-sm"
+                                    style="background:{{ preset[0] }};color:#fff;width:36px;height:36px;border-radius:50%;padding:0;border:2px solid transparent;"
+                                    title="{{ preset[1] }}" onclick="setColor('{{ preset[0] }}')"></button>
+                            {% endfor %}
+                        </div>
                     </div>
 
                     <div class="mb-4">
@@ -57,6 +83,14 @@
 
 {% block extra_js %}
 <script>
+function setColor(color) {
+    document.getElementById('color').value = color;
+    document.getElementById('colorHex').value = color;
+    document.getElementById('colorPreview').style.background = color + '30';
+    document.getElementById('colorPreview').style.color = color;
+    document.getElementById('colorPreview').style.borderColor = color + '40';
+}
+
 // 颜色选择器同步
 const colorPicker = document.getElementById('color');
 const colorHex = document.getElementById('colorHex');
