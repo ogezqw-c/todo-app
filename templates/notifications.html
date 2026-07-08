@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}通知中心 — TaskFlow{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>🔔 通知中心</h1>
+    {% if notifications %}
+    <form action="{{ url_for('main.notification_read_all') }}" method="POST">
+        <button type="submit" class="btn btn-sm btn-outline">
+            <i class="bi bi-check-all me-1"></i> 全部已读
+        </button>
+    </form>
+    {% endif %}
+</div>
+
+{% if notifications %}
+<div class="notification-list">
+    {% for notif in notifications %}
+    <div class="glass-card mb-2 animate-in {% if not notif.is_read %}border-unread{% endif %}">
+        <div class="card-body d-flex justify-content-between align-items-center py-3">
+            <div class="d-flex align-items-center gap-3">
+                {% if not notif.is_read %}
+                <span class="unread-dot" style="width:8px;height:8px;border-radius:50%;background:var(--gradient-start);flex-shrink:0;"></span>
+                {% else %}
+                <span style="width:8px;flex-shrink:0;"></span>
+                {% endif %}
+                <div>
+                    <span class="badge me-2" style="background:rgba(255,255,255,0.06);color:var(--text-secondary);">
+                        {% if notif.type == 'overdue' %}⏰ 逾期提醒{% else %}📋 信息{% endif %}
+                    </span>
+                    <span>{{ notif.message }}</span>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <small style="color:var(--text-muted);white-space:nowrap;">{{ notif.created_at.strftime('%m-%d %H:%M') }}</small>
+                {% if not notif.is_read %}
+                <form action="{{ url_for('main.notification_read', id=notif.id) }}" method="POST">
+                    <button type="submit" class="btn btn-sm p-0" style="color:var(--accent);" title="标记已读">
+                        <i class="bi bi-check-circle"></i>
+                    </button>
+                </form>
+                {% endif %}
+                {% if notif.task_id %}
+                <a href="{{ url_for('main.task_detail', id=notif.task_id) }}" class="btn btn-sm p-0" style="color:var(--text-muted);" title="查看任务">
+                    <i class="bi bi-arrow-right-circle"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="glass-card">
+    <div class="card-body empty-state">
+        <i class="bi bi-bell-slash"></i>
+        <p style="color:var(--text-muted); font-size:1.1rem;">暂无通知</p>
+        <small style="color:var(--text-muted);">当有任务逾期时，这里会自动显示提醒。</small>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

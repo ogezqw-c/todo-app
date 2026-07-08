@@ -452,6 +452,11 @@ h1 {
     font-weight: 700;
 }
 
+/* ---- 未读通知左边框 ---- */
+.border-unread {
+    border-left: 3px solid var(--gradient-start);
+}
+
 /* ---- 统计进度条 ---- */
 .stat-progress {
     height: 5px;

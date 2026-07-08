@@ -34,4 +34,26 @@ def create_app():
     from app.routes import main
     app.register_blueprint(main)
 
+    # 全局上下文：通知未读数（导航栏铃铛显示）
+    @app.context_processor
+    def inject_notification_count():
+        from app.notifications import Notification
+        with app.app_context():
+            count = Notification.query.filter_by(is_read=False).count()
+        return {'notification_count': count}
+
+    # 启动定期逾期检查（APScheduler，避免 debug 双进程）
+    if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
+        from apscheduler.schedulers.background import BackgroundScheduler
+        from app.notifications import check_and_notify
+        scheduler = BackgroundScheduler()
+        check_interval = app.config.get('NOTIFY_CHECK_MINUTES', 10)
+        scheduler.add_job(
+            lambda: check_and_notify(),
+            'interval',
+            minutes=check_interval,
+            id='overdue_check',
+        )
+        scheduler.start()
+
     return app

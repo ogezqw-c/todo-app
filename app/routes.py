@@ -281,6 +281,38 @@ def architecture():
 
 
 # ---------------------------------------------------------------------------
+# 通知中心
+# ---------------------------------------------------------------------------
+
+@main.route('/notifications')
+def notification_list():
+    """通知中心页面。"""
+    from app.notifications import Notification
+    notifications = Notification.query.order_by(Notification.created_at.desc()).all()
+    return render_template('notifications.html', notifications=notifications)
+
+
+@main.route('/notifications/read-all', methods=['POST'])
+def notification_read_all():
+    """全部标记已读。"""
+    from app.notifications import Notification
+    Notification.query.filter_by(is_read=False).update({'is_read': True})
+    db.session.commit()
+    flash('所有通知已标记为已读。', 'success')
+    return redirect(url_for('main.notification_list'))
+
+
+@main.route('/notifications/<int:id>/read', methods=['POST'])
+def notification_read(id):
+    """标记单条已读。"""
+    from app.notifications import Notification
+    notif = Notification.query.get_or_404(id)
+    notif.is_read = True
+    db.session.commit()
+    return redirect(request.referrer or url_for('main.notification_list'))
+
+
+# ---------------------------------------------------------------------------
 # 变更日志
 # ---------------------------------------------------------------------------
 
