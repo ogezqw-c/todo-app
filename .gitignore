@@ -3,6 +3,7 @@ __pycache__/
 *.pyo
 instance/
 .env
+.venv/
 .claude/plans/
 .claude/scheduled_tasks.json
 .idea/
