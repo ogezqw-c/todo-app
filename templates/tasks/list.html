@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}任务列表 — TaskFlow{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>📋 任务列表</h1>
+    <a href="{{ url_for('main.task_new') }}" class="btn btn-gradient">
+        <i class="bi bi-plus-lg"></i> 新建任务
+    </a>
+</div>
+
+<!-- 过滤器 -->
+<div class="glass-card mb-4 animate-in">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('main.task_list') }}" class="row g-2">
+            <div class="col-md-3">
+                <label for="status" class="form-label">状态</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="all" {% if current_filters.status == 'all' %}selected{% endif %}>全部</option>
+                    <option value="active" {% if current_filters.status == 'active' %}selected{% endif %}>未完成</option>
+                    <option value="completed" {% if current_filters.status == 'completed' %}selected{% endif %}>已完成</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="priority" class="form-label">优先级</label>
+                <select class="form-select" id="priority" name="priority">
+                    <option value="">全部</option>
+                    <option value="high" {% if current_filters.priority == 'high' %}selected{% endif %}>🔴 高</option>
+                    <option value="medium" {% if current_filters.priority == 'medium' %}selected{% endif %}>🟡 中</option>
+                    <option value="low" {% if current_filters.priority == 'low' %}selected{% endif %}>🟢 低</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="category" class="form-label">分类</label>
+                <select class="form-select" id="category" name="category">
+                    <option value="">全部</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if current_filters.category == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="sort" class="form-label">排序</label>
+                <select class="form-select" id="sort" name="sort">
+                    <option value="created" {% if current_filters.sort == 'created' %}selected{% endif %}>创建时间</option>
+                    <option value="due_date" {% if current_filters.sort == 'due_date' %}selected{% endif %}>截止日期</option>
+                    <option value="priority" {% if current_filters.sort == 'priority' %}selected{% endif %}>优先级</option>
+                </select>
+            </div>
+            <div class="col-12 mt-2">
+                <button type="submit" class="btn btn-gradient btn-sm">
+                    <i class="bi bi-funnel"></i> 筛选
+                </button>
+                <a href="{{ url_for('main.task_list') }}" class="btn btn-outline btn-sm ms-2">重置</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 任务列表 -->
+{% if tasks %}
+<div class="glass-card animate-in">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="width:42px;"></th>
+                        <th>标题</th>
+                        <th>优先级</th>
+                        <th>分类</th>
+                        <th>截止日期</th>
+                        <th class="text-end" style="width:100px;">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks %}
+                    <tr class="{% if task.is_overdue %}task-overdue{% endif %} {% if task.completed %}task-completed{% endif %}">
+                        <td class="text-center">
+                            <form action="{{ url_for('main.task_toggle', id=task.id) }}" method="POST" class="toggle-form">
+                                <button type="submit" class="btn btn-link p-0 toggle-btn"
+                                        title="{% if task.completed %}标记未完成{% else %}标记完成{% endif %}"
+                                        style="color: {% if task.completed %}var(--success){% else %}var(--text-muted){% endif %}; text-decoration:none;">
+                                    <i class="bi {% if task.completed %}bi-check-circle-fill{% else %}bi-circle{% endif %} fs-5"></i>
+                                </button>
+                            </form>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('main.task_detail', id=task.id) }}" class="text-decoration-none fw-semibold">
+                                {{ task.title }}
+                            </a>
+                            {% if task.description %}
+                            <br><small style="color:var(--text-muted);">{{ task.description[:50] }}{% if task.description|length > 50 %}…{% endif %}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge {{ task.priority_badge_class }}">
+                                {% if task.priority == 'high' %}高{% elif task.priority == 'medium' %}中{% else %}低{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            {% for cat in task.categories %}
+                            <span class="badge" style="background: {{ cat.color }}40; color: {{ cat.color }}; border: 1px solid {{ cat.color }}50;">{{ cat.name }}</span>
+                            {% else %}
+                            <span style="color:var(--text-muted);">—</span>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% if task.due_date %}
+                            <span class="{% if task.is_overdue %}due-date-overdue{% endif %}">{{ task.due_date|format_date }}</span>
+                            {% else %}
+                            <span style="color:var(--text-muted);">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{{ url_for('main.task_edit', id=task.id) }}" class="btn btn-sm btn-outline" title="编辑">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form action="{{ url_for('main.task_delete', id=task.id) }}" method="POST" class="d-inline delete-form">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="删除">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="glass-card animate-in">
+    <div class="card-body empty-state">
+        <i class="bi bi-inbox"></i>
+        <p style="color:var(--text-muted); font-size:1.1rem;">暂无任务，创建一个开始吧！</p>
+        <a href="{{ url_for('main.task_new') }}" class="btn btn-gradient mt-2">
+            <i class="bi bi-plus-lg me-1"></i> 新建任务
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

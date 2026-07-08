@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}{% if category %}编辑分类{% else %}新建分类{% endif %} — TaskFlow{% endblock %}
+
+{% block content %}
+<h1>{% if category %}✏️ 编辑分类{% else %}🎨 新建分类{% endif %}</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="glass-card animate-in">
+            <div class="card-body">
+                <form method="POST" action="{% if category %}{{ url_for('main.category_update', id=category.id) }}{% else %}{{ url_for('main.category_create') }}{% endif %}">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">名称 <span style="color:var(--danger);">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name"
+                               value="{{ category.name if category else '' }}" required maxlength="50"
+                               placeholder="例如：工作、个人、学习">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="color" class="form-label">颜色</label>
+                        <div class="input-group">
+                            <input type="color" class="form-control form-control-color" id="color" name="color"
+                                   value="{{ category.color if category else '#7C5CFC' }}" title="选择颜色">
+                            <input type="text" class="form-control" id="colorHex"
+                                   value="{{ category.color if category else '#7C5CFC' }}"
+                                   pattern="^#[0-9a-fA-F]{6}$" placeholder="#7C5CFC">
+                        </div>
+                        <div class="form-text">选择或输入十六进制颜色值</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">预览</label>
+                        <div>
+                            <span class="badge" id="colorPreview"
+                                  style="background: {{ category.color if category else '#7C5CFC' }}30;
+                                         color: {{ category.color if category else '#7C5CFC' }};
+                                         border: 1px solid {{ category.color if category else '#7C5CFC' }}40;
+                                         font-size: 1rem; padding: 0.4em 0.9em;">
+                                {{ category.name if category else '分类名称' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-gradient">
+                            <i class="bi bi-check-lg me-1"></i> 保存
+                        </button>
+                        <a href="{{ url_for('main.category_list') }}" class="btn btn-outline">取消</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 颜色选择器同步
+const colorPicker = document.getElementById('color');
+const colorHex = document.getElementById('colorHex');
+const colorPreview = document.getElementById('colorPreview');
+
+if (colorPicker && colorHex && colorPreview) {
+    function updatePreview(color) {
+        colorPreview.style.background = color + '30';
+        colorPreview.style.color = color;
+        colorPreview.style.borderColor = color + '40';
+    }
+    colorPicker.addEventListener('input', function() {
+        colorHex.value = this.value;
+        updatePreview(this.value);
+    });
+    colorHex.addEventListener('input', function() {
+        if (/^#[0-9a-fA-F]{6}$/.test(this.value)) {
+            colorPicker.value = this.value;
+            updatePreview(this.value);
+        }
+    });
+}
+</script>
+{% endblock %}

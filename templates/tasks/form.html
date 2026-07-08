@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}{% if task %}编辑任务{% else %}新建任务{% endif %} — TaskFlow{% endblock %}
+
+{% block content %}
+<h1>{% if task %}✏️ 编辑任务{% else %}✨ 新建任务{% endif %}</h1>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="glass-card animate-in">
+            <div class="card-body">
+                <form method="POST" action="{% if task %}{{ url_for('main.task_update', id=task.id) }}{% else %}{{ url_for('main.task_create') }}{% endif %}">
+                    <!-- 标题 -->
+                    <div class="mb-3">
+                        <label for="title" class="form-label">标题 <span style="color:var(--danger);">*</span></label>
+                        <input type="text" class="form-control" id="title" name="title"
+                               value="{{ task.title if task else '' }}" required maxlength="200"
+                               placeholder="输入任务标题...">
+                    </div>
+
+                    <!-- 描述 -->
+                    <div class="mb-3">
+                        <label for="description" class="form-label">描述</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"
+                                  placeholder="可选的详细描述...">{{ task.description if task and task.description else '' }}</textarea>
+                    </div>
+
+                    <!-- 优先级 + 截止日期 -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="priority" class="form-label">优先级</label>
+                            <select class="form-select" id="priority" name="priority">
+                                <option value="high" {% if task and task.priority == 'high' %}selected{% endif %}>🔴 高</option>
+                                <option value="medium" {% if not task or task.priority == 'medium' %}selected{% endif %}>🟡 中</option>
+                                <option value="low" {% if task and task.priority == 'low' %}selected{% endif %}>🟢 低</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="due_date" class="form-label">截止日期</label>
+                            <input type="date" class="form-control" id="due_date" name="due_date"
+                                   value="{{ task.due_date.strftime('%Y-%m-%d') if task and task.due_date else '' }}">
+                            <div class="form-text">可选，留空表示无截止日期</div>
+                        </div>
+                    </div>
+
+                    <!-- 分类 -->
+                    <div class="mb-4">
+                        <label class="form-label">分类标签</label>
+                        {% if categories %}
+                        <div class="row g-2">
+                            {% for cat in categories %}
+                            <div class="col-md-4 col-sm-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="categories" value="{{ cat.id }}"
+                                           id="cat{{ cat.id }}"
+                                           {% if (task and cat.id in selected_category_ids) or (not task and cat.id in (selected_category_ids|default([]))) %}checked{% endif %}>
+                                    <label class="form-check-label" for="cat{{ cat.id }}">
+                                        <span class="badge me-1" style="background: {{ cat.color }}30; color: {{ cat.color }}; border:1px solid {{ cat.color }}40;">{{ cat.name }}</span>
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p style="color:var(--text-muted);">
+                            暂无分类，<a href="{{ url_for('main.category_new') }}">创建一个分类</a>。
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <!-- 按钮 -->
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-gradient">
+                            <i class="bi bi-check-lg me-1"></i> 保存
+                        </button>
+                        <a href="{{ url_for('main.task_list') }}" class="btn btn-outline">取消</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 预览卡片（仅编辑时） -->
+    {% if task %}
+    <div class="col-lg-4">
+        <div class="glass-card animate-in">
+            <div class="card-header">
+                <i class="bi bi-eye me-2"></i> 当前信息
+            </div>
+            <div class="card-body">
+                <div class="mb-2"><span class="detail-label">标题</span></div>
+                <div class="mb-3"><strong>{{ task.title }}</strong></div>
+                <div class="mb-2"><span class="detail-label">状态</span></div>
+                <div class="mb-3">
+                    {% if task.completed %}
+                    <span class="badge bg-success">已完成</span>
+                    {% else %}
+                    <span class="badge bg-secondary">未完成</span>
+                    {% endif %}
+                </div>
+                <div class="mb-2"><span class="detail-label">创建时间</span></div>
+                <div style="color:var(--text-muted);">{{ task.created_at|format_date }}</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

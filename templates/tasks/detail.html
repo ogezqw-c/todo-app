@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}{{ task.title }} — TaskFlow{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('main.task_list') }}">任务列表</a></li>
+        <li class="breadcrumb-item active">{{ task.title }}</li>
+    </ol>
+</nav>
+
+<div class="glass-card animate-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h2 class="h5 mb-0" style="background:none;-webkit-text-fill-color:var(--text-primary);">{{ task.title }}</h2>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('main.task_edit', id=task.id) }}" class="btn btn-sm btn-outline">
+                <i class="bi bi-pencil me-1"></i> 编辑
+            </a>
+            <form action="{{ url_for('main.task_delete', id=task.id) }}" method="POST" class="d-inline delete-form">
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                    <i class="bi bi-trash me-1"></i> 删除
+                </button>
+            </form>
+        </div>
+    </div>
+    <div class="card-body">
+        <!-- 状态 -->
+        <div class="row detail-row">
+            <div class="col-md-3 detail-label">状态</div>
+            <div class="col-md-9 detail-value">
+                <form action="{{ url_for('main.task_toggle', id=task.id) }}" method="POST" class="toggle-form d-inline">
+                    <button type="submit" class="btn btn-sm toggle-btn {% if task.completed %}btn-gradient{% else %}btn-outline{% endif %}">
+                        <i class="bi {% if task.completed %}bi-check-circle-fill{% else %}bi-circle{% endif %} me-1"></i>
+                        {{ '已完成' if task.completed else '未完成' }}
+                    </button>
+                </form>
+                {% if task.completed_at %}
+                <small style="color:var(--text-muted); margin-left:0.75rem;">完成于 {{ task.completed_at|format_date }}</small>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 优先级 -->
+        <div class="row detail-row">
+            <div class="col-md-3 detail-label">优先级</div>
+            <div class="col-md-9 detail-value">
+                <span class="badge {{ task.priority_badge_class }}" style="font-size:0.85rem;">
+                    {% if task.priority == 'high' %}🔴 高{% elif task.priority == 'medium' %}🟡 中{% else %}🟢 低{% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- 截止日期 -->
+        <div class="row detail-row">
+            <div class="col-md-3 detail-label">截止日期</div>
+            <div class="col-md-9 detail-value">
+                {% if task.due_date %}
+                <span class="{% if task.is_overdue %}due-date-overdue{% endif %}">
+                    {{ task.due_date|format_date }}
+                    {% if task.is_overdue %}<span class="badge bg-danger ms-2">已逾期</span>{% endif %}
+                </span>
+                {% else %}
+                <span style="color:var(--text-muted);">—</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 分类 -->
+        <div class="row detail-row">
+            <div class="col-md-3 detail-label">分类</div>
+            <div class="col-md-9 detail-value">
+                {% for cat in task.categories %}
+                <span class="badge me-1" style="background: {{ cat.color }}30; color: {{ cat.color }}; border: 1px solid {{ cat.color }}40;">{{ cat.name }}</span>
+                {% else %}
+                <span style="color:var(--text-muted);">—</span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 描述 -->
+        {% if task.description %}
+        <div class="row detail-row">
+            <div class="col-md-3 detail-label">描述</div>
+            <div class="col-md-9 detail-value">{{ task.description }}</div>
+        </div>
+        {% endif %}
+    </div>
+    <div class="card-footer">
+        <small>
+            <i class="bi bi-clock me-1"></i> 创建于 {{ task.created_at|format_date }}
+            &nbsp;·&nbsp;
+            <i class="bi bi-pencil me-1"></i> 更新于 {{ task.updated_at|format_date }}
+        </small>
+    </div>
+</div>
+{% endblock %}

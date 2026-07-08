@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}变更日志 — TaskFlow{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>📝 开发变更日志</h1>
+    <button class="btn btn-gradient" type="button" data-bs-toggle="collapse" data-bs-target="#addForm">
+        <i class="bi bi-plus-lg"></i> 新增记录
+    </button>
+</div>
+
+<!-- 新增表单 -->
+<div class="collapse mb-4" id="addForm">
+    <div class="glass-card">
+        <div class="card-header">
+            <i class="bi bi-journal-plus me-2"></i> 新建变更记录
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('main.changelog_add') }}">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label for="type" class="form-label">类型</label>
+                        <select class="form-select" id="type" name="type" onchange="toggleRelates(this.value)">
+                            <option value="需求变更">📋 需求变更</option>
+                            <option value="代码变更" selected>💻 代码变更</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4" id="relatesGroup">
+                        <label for="relates_to" class="form-label">关联需求</label>
+                        <select class="form-select" id="relates_to" name="relates_to">
+                            <option value="">无</option>
+                            {% for req in requirements %}
+                            <option value="{{ req.id }}">#{{ req.id }} {{ req.title[:40] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="title" class="form-label">标题 <span style="color:var(--danger);">*</span></label>
+                    <input type="text" class="form-control" id="title" name="title" required
+                           placeholder="变更摘要，如：视觉重设计：暗色科技风">
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">描述 <span style="color:var(--danger);">*</span></label>
+                    <textarea class="form-control" id="description" name="description" rows="3" required
+                              placeholder="详细描述变更内容和原因..."></textarea>
+                </div>
+
+                <div class="mb-3" id="filesGroup">
+                    <label for="files" class="form-label">涉及文件</label>
+                    <textarea class="form-control" id="files" name="files" rows="3"
+                              placeholder="每行一个文件路径，如：&#10;static/css/style.css&#10;templates/base.html"></textarea>
+                    <div class="form-text">每行一个文件路径，仅代码变更需要填写。</div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-gradient">
+                        <i class="bi bi-check-lg me-1"></i> 保存
+                    </button>
+                    <button type="button" class="btn btn-outline" data-bs-toggle="collapse" data-bs-target="#addForm">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 时间线 -->
+{% if entries %}
+<div class="timeline">
+    {% for entry in entries %}
+    <div class="glass-card mb-3 animate-in {% if entry.type == '需求变更' %}border-requirement{% endif %}">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                    <span class="badge me-2" style="{% if entry.type == '需求变更' %}background: var(--gradient-start);{% else %}background: var(--accent);{% endif %}">
+                        {{ '📋' if entry.type == '需求变更' else '💻' }} {{ entry.type }}
+                    </span>
+                    {% if entry.relates_to %}
+                    {% set related = get_related(entry.relates_to) %}
+                    <a href="#entry-{{ entry.relates_to }}" class="badge" style="background:rgba(255,255,255,0.06); color:var(--text-secondary); text-decoration:none;">
+                        🔗 关联 #{{ entry.relates_to }}{% if related %} — {{ related.title[:30] }}{% endif %}
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <small style="color:var(--text-muted);">{{ entry.timestamp[:16] | replace('T', ' ') }}</small>
+                    <form action="{{ url_for('main.changelog_delete', id=entry.id) }}" method="POST" class="d-inline delete-form">
+                        <button type="submit" class="btn btn-sm p-0" style="color:var(--text-muted);" title="删除">
+                            <i class="bi bi-x-circle"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <h5 id="entry-{{ entry.id }}" style="background:none;-webkit-text-fill-color:var(--text-primary);">{{ entry.title }}</h5>
+            <p style="color:var(--text-secondary); font-size:0.9rem; white-space:pre-wrap;">{{ entry.description }}</p>
+
+            {% if entry.files %}
+            <div class="mt-2">
+                <small style="color:var(--text-muted);">涉及文件：</small>
+                {% for f in entry.files %}
+                <code style="background:rgba(255,255,255,0.04); color:var(--accent); font-size:0.78rem; padding:2px 6px; border-radius:4px; margin:0 2px;">{{ f }}</code>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="glass-card">
+    <div class="card-body empty-state">
+        <i class="bi bi-journal-text"></i>
+        <p style="color:var(--text-muted); font-size:1.1rem;">暂无变更记录</p>
+        <button class="btn btn-gradient mt-2" type="button" data-bs-toggle="collapse" data-bs-target="#addForm">
+            <i class="bi bi-plus-lg me-1"></i> 添加第一条记录
+        </button>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 切换类型时显示/隐藏关联需求和文件字段
+function toggleRelates(type) {
+    var relatesGroup = document.getElementById('relatesGroup');
+    var filesGroup = document.getElementById('filesGroup');
+    if (type === '需求变更') {
+        if (relatesGroup) relatesGroup.style.display = 'none';
+        if (filesGroup) filesGroup.style.display = 'none';
+    } else {
+        if (relatesGroup) relatesGroup.style.display = '';
+        if (filesGroup) filesGroup.style.display = '';
+    }
+}
+</script>
+{% endblock %}

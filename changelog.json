@@ -1,0 +1,137 @@
+[
+  {
+    "id": 1,
+    "timestamp": "2026-07-08T14:30:00",
+    "type": "需求变更",
+    "title": "初始项目：Python Web Todo 应用",
+    "description": "用户要求用 Python 实现一个功能完整的 Todo 软件。确定技术栈：Flask + SQLAlchemy + SQLite + Bootstrap 5。功能需求包括：任务 CRUD、三级优先级、截止日期、分类标签系统、数据统计仪表盘。",
+    "files": [],
+    "relates_to": null
+  },
+  {
+    "id": 2,
+    "timestamp": "2026-07-08T14:50:00",
+    "type": "代码变更",
+    "title": "搭建项目骨架与数据模型",
+    "description": "创建 Flask 工厂模式骨架（config.py、app/__init__.py、app.py）。定义 Task 和 Category 模型及多对多关联表 task_categories。安装依赖 Flask 3.1、Flask-SQLAlchemy 3.1、python-dateutil。",
+    "files": [
+      "requirements.txt",
+      "config.py",
+      "app.py",
+      "app/__init__.py",
+      "app/models.py"
+    ],
+    "relates_to": 1
+  },
+  {
+    "id": 3,
+    "timestamp": "2026-07-08T15:00:00",
+    "type": "代码变更",
+    "title": "实现分类 CRUD 与任务 CRUD",
+    "description": "完成分类增删改查（路由 + categories/list.html + categories/form.html）。完成任务增删改查 + 过滤排序（routes.py + tasks/list.html + tasks/detail.html + tasks/form.html）。实现 PRG 模式、flash 消息反馈。",
+    "files": [
+      "app/routes.py",
+      "templates/base.html",
+      "templates/categories/list.html",
+      "templates/categories/form.html",
+      "templates/tasks/list.html",
+      "templates/tasks/detail.html",
+      "templates/tasks/form.html"
+    ],
+    "relates_to": 1
+  },
+  {
+    "id": 4,
+    "timestamp": "2026-07-08T15:10:00",
+    "type": "代码变更",
+    "title": "实现统计仪表盘与前端交互",
+    "description": "创建 app/stats.py 统计函数（完成率、逾期数、分类分布、优先级分布、最近任务）。构建 index.html 仪表盘页面（统计卡片 + 进度条 + 表格）。创建 app/utils.py Jinja 过滤器。编写 static/js/app.js 删除确认与行内切换逻辑。",
+    "files": [
+      "app/stats.py",
+      "app/utils.py",
+      "templates/index.html",
+      "static/css/style.css",
+      "static/js/app.js"
+    ],
+    "relates_to": 1
+  },
+  {
+    "id": 5,
+    "timestamp": "2026-07-08T15:20:00",
+    "type": "需求变更",
+    "title": "项目注释改为中文",
+    "description": "用户要求将项目中所有代码注释和文档字符串翻译为中文。涉及 Python 文件、JavaScript、CSS 的注释，以及日期格式改为中文显示（YYYY年MM月DD日）。",
+    "files": [],
+    "relates_to": null
+  },
+  {
+    "id": 6,
+    "timestamp": "2026-07-08T15:25:00",
+    "type": "代码变更",
+    "title": "翻译所有注释为中文",
+    "description": "更新 app/__init__.py、app/routes.py、app/stats.py、app/utils.py 中的英文注释和 docstring 为中文。static/js/app.js 和 static/css/style.css 的区块注释翻译。test_app.py 测试注释同步翻译。utils.py 中日期格式从 '%b %d, %Y' 改为 '%Y年%m月%d日'。",
+    "files": [
+      "app/__init__.py",
+      "app/routes.py",
+      "app/stats.py",
+      "app/utils.py",
+      "static/js/app.js",
+      "static/css/style.css",
+      "test_app.py"
+    ],
+    "relates_to": 5
+  },
+  {
+    "id": 7,
+    "timestamp": "2026-07-08T15:55:00",
+    "type": "需求变更",
+    "title": "视觉重设计：年轻化科技感暗色主题",
+    "description": "用户认为当前 UI 偏传统商务风，要求向年轻化、科技感方向靠拢，必要时可更换框架。最终决定保留 Bootstrap 5 作为底层网格/组件框架，通过完全重写 CSS 实现视觉转型。设计方向：暗色模式、毛玻璃拟态、紫青渐变主色调、霓虹光晕交互、Inter 字体、网格纹理背景、入场动画。",
+    "files": [],
+    "relates_to": null
+  },
+  {
+    "id": 8,
+    "timestamp": "2026-07-08T16:15:00",
+    "type": "代码变更",
+    "title": "重写 style.css 并重构全部模板",
+    "description": "完全重写 style.css（~320行），定义 CSS 变量系统（颜色、阴影、圆角、过渡）。新增 .glass-card 毛玻璃卡片、.btn-gradient 渐变按钮、统计卡片、暗色表单/表格、逾期脉冲动画、fadeInUp 入场动画。base.html 导航栏改为毛玻璃 sticky，页脚半透明化，flash 消息改为浮动 toast 风格。所有页面适配新设计系统。导航栏品牌名改为 TaskFlow。",
+    "files": [
+      "static/css/style.css",
+      "templates/base.html",
+      "templates/index.html",
+      "templates/tasks/list.html",
+      "templates/tasks/detail.html",
+      "templates/tasks/form.html",
+      "templates/categories/list.html",
+      "templates/categories/form.html",
+      "static/js/app.js"
+    ],
+    "relates_to": 7
+  },
+  {
+    "id": 9,
+    "timestamp": "2026-07-08T16:45:00",
+    "type": "需求变更",
+    "title": "增加开发审计日志（Changelog）",
+    "description": "用户要求记录项目开发过程中的需求变更和代码变更，而非应用内的操作日志。需要本地存储，Web 页面可查看和添加条目。需求变更和代码变更通过 relates_to 字段关联追溯。",
+    "files": [],
+    "relates_to": null
+  },
+  {
+    "id": 10,
+    "timestamp": "2026-07-08T16:55:00",
+    "type": "代码变更",
+    "title": "实现开发审计日志系统",
+    "description": "创建 app/audit.py 读写 changelog.json 模块。routes.py 新增 GET /changelog、POST /changelog、POST /changelog/<id>/delete 三个路由。新建 templates/changelog.html 时间线页面（含新增表单、类型切换、关联需求选择）。__init__.py 注册 get_related 模板过滤器。base.html 导航栏新增「变更日志」入口。初始化 changelog.json 包含项目开发以来的历史记录。",
+    "files": [
+      "app/audit.py",
+      "app/routes.py",
+      "app/__init__.py",
+      "templates/changelog.html",
+      "templates/base.html",
+      "changelog.json"
+    ],
+    "relates_to": 9
+  }
+]

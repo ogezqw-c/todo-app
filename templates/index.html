@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}仪表盘 — TaskFlow{% endblock %}
+
+{% block content %}
+<h1>📊 统计仪表盘</h1>
+
+<!-- 统计卡片 -->
+<div class="row row-cols-1 row-cols-md-4 g-3 mb-4">
+    <div class="col animate-in">
+        <div class="stat-card stat-total">
+            <div class="stat-value">{{ total }}</div>
+            <div class="stat-label">总任务数</div>
+            <i class="bi bi-collection stat-icon"></i>
+        </div>
+    </div>
+    <div class="col animate-in">
+        <div class="stat-card stat-done">
+            <div class="stat-value">{{ completed }}</div>
+            <div class="stat-label">已完成</div>
+            <i class="bi bi-check2-circle stat-icon"></i>
+        </div>
+    </div>
+    <div class="col animate-in">
+        <div class="stat-card stat-overdue">
+            <div class="stat-value">{{ overdue }}</div>
+            <div class="stat-label">已逾期</div>
+            <i class="bi bi-exclamation-diamond stat-icon"></i>
+        </div>
+    </div>
+    <div class="col animate-in">
+        <div class="stat-card stat-rate">
+            <div class="stat-value">{{ completion_rate }}%</div>
+            <div class="stat-label">完成率</div>
+            <i class="bi bi-graph-up-arrow stat-icon"></i>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- 分类统计 -->
+    <div class="col-md-6 animate-in">
+        <div class="glass-card h-100">
+            <div class="card-header">
+                <i class="bi bi-pie-chart me-2"></i> 分类统计
+            </div>
+            <div class="card-body">
+                {% if by_category %}
+                {% for name, count, color in by_category %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span style="font-size:0.9rem;">
+                            <span class="color-swatch me-2" style="background-color: {{ color }};"></span>
+                            {{ name }}
+                        </span>
+                        <span class="fw-bold">{{ count }}</span>
+                    </div>
+                    <div class="progress stat-progress">
+                        <div class="progress-bar" style="width: {{ (count / total * 100)|round if total > 0 else 0 }}%; background: {{ color }};"></div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-center my-4" style="color:var(--text-muted);">暂无分类数据</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 优先级分布 -->
+    <div class="col-md-6 animate-in">
+        <div class="glass-card h-100">
+            <div class="card-header">
+                <i class="bi bi-bar-chart me-2"></i> 优先级分布
+            </div>
+            <div class="card-body">
+                {% set max_count = [by_priority.high, by_priority.medium, by_priority.low] | max %}
+                {% set items = [
+                    ('高优先级', by_priority.high, 'var(--danger)'),
+                    ('中优先级', by_priority.medium, 'var(--warning)'),
+                    ('低优先级', by_priority.low, 'var(--success)'),
+                ] %}
+                {% for label, count, color in items %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span style="font-size:0.9rem;">{{ label }}</span>
+                        <span class="fw-bold">{{ count }}</span>
+                    </div>
+                    <div class="progress stat-progress">
+                        <div class="progress-bar" style="width: {{ (count / max_count * 100)|round if max_count > 0 else 0 }}%; background: {{ color }};"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 最近任务 -->
+<div class="glass-card animate-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-clock me-2"></i> 最近任务</span>
+        {% if recent %}
+        <a href="{{ url_for('main.task_list') }}" class="btn btn-sm btn-outline">查看全部 →</a>
+        {% endif %}
+    </div>
+    <div class="card-body p-0">
+        {% if recent %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>标题</th>
+                        <th>优先级</th>
+                        <th>截止日期</th>
+                        <th>状态</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in recent %}
+                    <tr class="{% if task.is_overdue %}task-overdue{% endif %}">
+                        <td>
+                            <a href="{{ url_for('main.task_detail', id=task.id) }}" class="text-decoration-none fw-semibold">
+                                {{ task.title }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="badge {{ task.priority_badge_class }}">
+                                {% if task.priority == 'high' %}高{% elif task.priority == 'medium' %}中{% else %}低{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            {% if task.due_date %}
+                            <span class="{% if task.is_overdue %}due-date-overdue{% endif %}">{{ task.due_date|format_date }}</span>
+                            {% else %}
+                            <span style="color:var(--text-muted);">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if task.completed %}
+                            <span class="badge bg-success">已完成</span>
+                            {% else %}
+                            <span class="badge bg-secondary">未完成</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="bi bi-inbox"></i>
+            <p style="color:var(--text-muted);">还没有任务，创建一个开始吧！</p>
+            <a href="{{ url_for('main.task_new') }}" class="btn btn-gradient mt-2">
+                <i class="bi bi-plus-lg me-1"></i> 新建任务
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
